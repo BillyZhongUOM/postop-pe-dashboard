@@ -315,7 +315,7 @@ th.sortable:hover { background: #c5d3e8; }
     <div class="card">
       <div class="card-title">Adjusted Risk by Period (Post-Discharge 90-Day)</div>
       <div class="chart-container"><canvas id="chart-period-risk" height="280"></canvas></div>
-      <p style="font-size:11px;color:#666;margin:6px 0 0;">Adjusted via marginal standardisation (age, sex, CCI). Reference period: 2006–2009. COVID period (2020–2021) excluded. Hip PE risk halved over the study period; knee PE decline was not statistically significant.</p>
+      <p style="font-size:11px;color:#666;margin:6px 0 0;">Adjusted by age, sex, and Charlson Comorbidity Index. Reference period: 2006–2009. COVID period (2020–2021) excluded. Hip PE risk halved over the study period; knee PE decline was not statistically significant.</p>
     </div>
     <div class="card">
       <div class="card-title">Bleeding Subtypes — Post-Discharge 90-Day Events</div>
@@ -336,7 +336,7 @@ th.sortable:hover { background: #c5d3e8; }
 <!-- ==================== ICB MAP ==================== -->
 <div class="page" id="page-icb-map">
   <div class="callout info">
-    <strong>Geographic variation:</strong> This map shows post-discharge 90-day PE or bleeding risk across 42 Integrated Care Boards (ICBs) in England. Crude rates are computed from the selected year range; adjusted rates (from marginal standardisation for 2022–2024) are shown in tooltips and the ranking table where available. Use the sliders to explore how geographic patterns change over time.
+    <strong>Geographic variation:</strong> This map shows post-discharge 90-day PE or bleeding risk across 42 Integrated Care Boards (ICBs) in England. Crude rates are computed from the selected year range; adjusted rates (adjusted by age, sex, and CCI for 2022–2024) are shown in tooltips and the ranking table where available. Use the sliders to explore how geographic patterns change over time.
   </div>
   <div class="controls">
     <div class="control-group">
@@ -377,7 +377,7 @@ th.sortable:hover { background: #c5d3e8; }
     <div class="card">
       <div class="card-title">ICB Rankings — <span id="ranking-title">Knee PE</span> (Crude Rate)</div>
       <div class="table-scroll" id="icb-table-container"></div>
-      <p style="font-size:11px;color:#666;margin:6px 0 0;">Click column headers to sort. Crude rate = events / procedures × 100. Adjusted risk uses marginal standardisation (age, sex, CCI) and is only available for 2022–2024. ICBs with <10 events or <100 procedures are suppressed.</p>
+      <p style="font-size:11px;color:#666;margin:6px 0 0;">Click column headers to sort. Crude rate = events / procedures × 100. Adjusted risk (by age, sex, CCI) is only available for 2022–2024. ICBs with <10 events or <100 procedures are suppressed.</p>
     </div>
   </div>
 </div>
