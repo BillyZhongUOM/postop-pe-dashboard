@@ -439,15 +439,22 @@ th.sortable:hover { background: #c5d3e8; }
   </div>
   <div class="card">
     <div class="card-title">COVID Sensitivity — Period Odds Ratios (vs 2006–2009)</div>
-    <div style="margin-bottom:10px;">
-      <label style="font-size:13px;margin-right:12px;">
+    <div style="margin-bottom:8px; display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+      <label style="font-size:12px;">
         <input type="radio" name="covid-toggle" value="excluded" checked onchange="updateSensChart()"> COVID excluded
       </label>
-      <label style="font-size:13px;">
+      <label style="font-size:12px;">
         <input type="radio" name="covid-toggle" value="included" onchange="updateSensChart()"> COVID included
       </label>
+      <select id="sens-combo" onchange="updateSensChart()" style="font-size:12px; padding:2px 6px;">
+        <option value="all">All outcomes</option>
+        <option value="Knee PE">Knee PE</option>
+        <option value="Knee Bleeding">Knee Bleeding</option>
+        <option value="Hip PE">Hip PE</option>
+        <option value="Hip Bleeding">Hip Bleeding</option>
+      </select>
     </div>
-    <div class="chart-container"><canvas id="chart-covid-sens" height="320"></canvas></div>
+    <div class="chart-container"><canvas id="chart-covid-sens" height="160"></canvas></div>
   </div>
 </div>
 
@@ -1102,12 +1109,14 @@ function updateSensChart() {
     ? [...basePeriods, 'COVID']
     : [...basePeriods];
 
-  const combos = [
+  const allCombos = [
     {jt:'Knee', out:'PE', label:'Knee PE', color:COLORS.kneePE, dash:[]},
     {jt:'Knee', out:'Bleeding', label:'Knee Bleeding', color:COLORS.kneeBleed, dash:[]},
     {jt:'Hip', out:'PE', label:'Hip PE', color:COLORS.hipPE, dash:[5,5]},
     {jt:'Hip', out:'Bleeding', label:'Hip Bleeding', color:COLORS.hipBleed, dash:[5,5]}
   ];
+  const sel = document.getElementById('sens-combo').value;
+  const combos = sel === 'all' ? allCombos : allCombos.filter(c => c.label === sel);
 
   // Build datasets with error bars stored per-point
   const datasets = combos.map(c => {
