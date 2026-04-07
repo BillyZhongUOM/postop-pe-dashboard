@@ -611,18 +611,35 @@ function initOverview() {
   let kneeRows = display.filter(r => r.group === 'Knee');
   let hipRows = display.filter(r => r.group === 'Hip');
   // Build merged rows
-  const varOrder = [...new Set(kneeRows.map(r => r.variable + '|' + r.level))];
-  let html = '<table class="data-table"><thead><tr><th>Variable</th><th>Level</th><th>Knee</th><th>Hip</th></tr></thead><tbody>';
-  varOrder.forEach(key => {
-    const [v, l] = key.split('|');
-    const kr = kneeRows.find(r => r.variable === v && r.level === l);
-    const hr = hipRows.find(r => r.variable === v && r.level === l);
-    const fmtCell = r => {
-      if (!r) return '—';
-      if (r.pct === '' || r.pct === undefined || r.pct === null) return r.level || fmt(r.n);
-      return fmt(r.n) + ' (' + (+r.pct).toFixed(1) + '%)';
-    };
-    html += `<tr><td>${v}</td><td>${l}</td><td class="num">${fmtCell(kr)}</td><td class="num">${fmtCell(hr)}</td></tr>`;
+  // Summary stat variables (mean age, LOS) have the VALUE in level, not a category
+  const summaryVars = ['Age, mean (SD)', 'LOS, median (IQR)'];
+  // Build ordered variable list from Knee rows
+  const varOrder = [];
+  const seenKeys = new Set();
+  kneeRows.forEach(r => {
+    // For summary vars, use variable name only as key (level differs between joints)
+    const key = summaryVars.includes(r.variable) ? r.variable : r.variable + '|' + r.level;
+    if (!seenKeys.has(key)) { seenKeys.add(key); varOrder.push({variable: r.variable, level: r.level, isSummary: summaryVars.includes(r.variable)}); }
+  });
+  let html = '<table class="data-table"><thead><tr><th>Variable</th><th></th><th>Knee</th><th>Hip</th></tr></thead><tbody>';
+  varOrder.forEach(item => {
+    const v = item.variable;
+    if (item.isSummary) {
+      // Summary stat: show each joint's own value
+      const kr = kneeRows.find(r => r.variable === v);
+      const hr = hipRows.find(r => r.variable === v);
+      html += `<tr><td>${v}</td><td></td><td class="num">${kr ? kr.level : '—'}</td><td class="num">${hr ? hr.level : '—'}</td></tr>`;
+    } else {
+      const l = item.level;
+      const kr = kneeRows.find(r => r.variable === v && r.level === l);
+      const hr = hipRows.find(r => r.variable === v && r.level === l);
+      const fmtCell = r => {
+        if (!r) return '—';
+        if (r.pct === '' || r.pct === undefined || r.pct === null) return fmt(r.n);
+        return fmt(r.n) + ' (' + (+r.pct).toFixed(1) + '%)';
+      };
+      html += `<tr><td>${v}</td><td>${l}</td><td class="num">${fmtCell(kr)}</td><td class="num">${fmtCell(hr)}</td></tr>`;
+    }
   });
   html += '</tbody></table>';
   document.getElementById('table1-container').innerHTML = html;
