@@ -812,13 +812,7 @@ function updateICBMap() {
   legend.addTo(map);
   window._legend = legend;
 
-  // Update table
-  const sorted = icbData.slice().sort((a, b) => {
-    if (a.suppressed && !b.suppressed) return 1;
-    if (!a.suppressed && b.suppressed) return -1;
-    return b.rate - a.rate;
-  });
-  // Store data for sorting
+  // Update table — store data for sorting
   const tableData = icbData.filter(d => !d.suppressed).map(d => {
     const adj = adjMap[d.cd];
     return { nm: d.nm, n: d.n, events: d.events, rate: d.rate, adjRisk: adj ? +adj.risk : null };
@@ -849,23 +843,23 @@ function renderICBTable() {
     {key:'rate', label:'Crude Rate (%)', align:'num'},
     {key:'adjRisk', label:'Adj. Risk (%)', align:'num'}
   ];
-  let html = '<table class="data-table"><thead><tr>';
+  let thtml = '<table class="data-table"><thead><tr>';
   cols.forEach(c => {
     const indicator = col === c.key ? arrow : '';
-    html += `<th class="sortable" data-col="${c.key}" style="cursor:pointer;">${c.label}${indicator}</th>`;
+    thtml += `<th class="sortable" data-col="${c.key}" style="cursor:pointer;">${c.label}${indicator}</th>`;
   });
-  html += '</tr></thead><tbody>';
+  thtml += '</tr></thead><tbody>';
   sorted.forEach(d => {
-    html += `<tr>`;
-    html += `<td>${d.nm}</td>`;
-    html += `<td class="num">${fmt(d.n)}</td>`;
-    html += `<td class="num">${fmt(d.events)}</td>`;
-    html += `<td class="num">${d.rate.toFixed(3)}</td>`;
-    html += `<td class="num">${d.adjRisk !== null ? (d.adjRisk * 100).toFixed(3) : '—'}</td>`;
-    html += `</tr>`;
+    thtml += `<tr>`;
+    thtml += `<td>${d.nm}</td>`;
+    thtml += `<td class="num">${fmt(d.n)}</td>`;
+    thtml += `<td class="num">${fmt(d.events)}</td>`;
+    thtml += `<td class="num">${d.rate.toFixed(3)}</td>`;
+    thtml += `<td class="num">${d.adjRisk !== null ? (d.adjRisk * 100).toFixed(3) : '—'}</td>`;
+    thtml += `</tr>`;
   });
-  html += '</tbody></table>';
-  document.getElementById('icb-table-container').innerHTML = html;
+  thtml += '</tbody></table>';
+  document.getElementById('icb-table-container').innerHTML = thtml;
 
   // Attach click handlers for sorting
   document.querySelectorAll('#icb-table-container th.sortable').forEach(th => {
@@ -1149,16 +1143,16 @@ function initSensitivity() {
   };
 
   new Chart(document.getElementById('chart-covid-sens'), {
-    type: 'bar',
+    type: 'scatter',
     data: {
-      labels,
       datasets: [
-        {...dsExcl, type:'scatter', data: dsExcl.data.map((v,i) => v !== null ? {x:v, y:i-0.12} : null)},
-        {...dsIncl, type:'scatter', data: dsIncl.data.map((v,i) => v !== null ? {x:v, y:i+0.12} : null)}
+        {label:'COVID excluded', data: dsExcl.data.map((v,i) => v !== null ? {x:v, y:i-0.12} : null).filter(Boolean),
+         backgroundColor:'#002147', borderColor:'#002147', pointRadius:5, pointStyle:'circle'},
+        {label:'COVID included', data: dsIncl.data.map((v,i) => v !== null ? {x:v, y:i+0.12} : null).filter(Boolean),
+         backgroundColor:'rgba(0,33,71,0.35)', borderColor:'#002147', pointRadius:5, pointStyle:'triangle'}
       ]
     },
     options: {
-      indexAxis: 'y',
       responsive: true,
       plugins: {
         legend: { position: 'bottom', labels: { usePointStyle: true, padding: 12 } },
@@ -1168,9 +1162,8 @@ function initSensitivity() {
               const idx = Math.round(ctx.parsed.y + (ctx.datasetIndex === 0 ? 0.12 : -0.12));
               const errs = ctx.datasetIndex === 0 ? errExcl : errIncl;
               const or = ctx.parsed.x;
-              const lo = (or - errs[idx][0]).toFixed(3);
-              const hi = (or + errs[idx][1]).toFixed(3);
-              return `OR: ${or.toFixed(3)} (${lo}–${hi})`;
+              if (!errs[idx]) return `OR: ${or.toFixed(3)}`;
+              return `OR: ${or.toFixed(3)} (${(or - errs[idx][0]).toFixed(3)}–${(or + errs[idx][1]).toFixed(3)})`;
             }
           }
         }
@@ -1178,7 +1171,8 @@ function initSensitivity() {
       scales: {
         x: { title: { display: true, text: 'Odds Ratio (vs 2006–2009)' },
              min: 0.4, max: 1.2 },
-        y: { type: 'category', labels, ticks: { font: { size: 10 } },
+        y: { reverse: true, min: -0.5, max: labels.length - 0.5,
+             ticks: { callback: (v) => labels[Math.round(v)] || '', stepSize: 1, font: { size: 10 } },
              grid: { display: false } }
       }
     },
