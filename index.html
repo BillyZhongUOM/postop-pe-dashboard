@@ -307,11 +307,15 @@ th.sortable:hover { background: #c5d3e8; }
 
 <!-- ==================== OVERVIEW ==================== -->
 <div class="page active" id="page-overview">
+  <div class="callout info">
+    <strong>Study design:</strong> Population-based retrospective cohort study of nearly 1.9 million elective hip and knee replacement patients in England (2006–2024), using Hospital Episode Statistics linked to ONS death records. A self-controlled crossover design pairs each post-discharge week with a matched control week 180 days later, eliminating time-invariant confounding. Outcomes are split into in-hospital events and post-discharge 90-day events (primary analysis).
+  </div>
   <div class="grid-4" id="value-boxes"></div>
   <div class="grid-2">
     <div class="card">
       <div class="card-title">Adjusted Risk by Period (Post-Discharge 90-Day)</div>
       <div class="chart-container"><canvas id="chart-period-risk" height="280"></canvas></div>
+      <p style="font-size:11px;color:#666;margin:6px 0 0;">Adjusted via marginal standardisation (age, sex, CCI). Reference period: 2006–2009. COVID period (2020–2021) excluded. Hip PE risk halved over the study period; knee PE decline was not statistically significant.</p>
     </div>
     <div class="card">
       <div class="card-title">Bleeding Subtypes — Post-Discharge 90-Day Events</div>
@@ -319,16 +323,21 @@ th.sortable:hover { background: #c5d3e8; }
         <div class="chart-container"><canvas id="chart-bleed-knee" height="240"></canvas></div>
         <div class="chart-container"><canvas id="chart-bleed-hip" height="240"></canvas></div>
       </div>
+      <p style="font-size:11px;color:#666;margin:6px 0 0;">Classification per Hammami et al. (Heart 2025). Upper GI bleeding is the dominant subtype (~48%), consistent with anticoagulant and NSAID-related gastrointestinal toxicity. Categories are not mutually exclusive.</p>
     </div>
   </div>
   <div class="card">
     <div class="card-title">Baseline Characteristics</div>
     <div class="table-scroll" id="table1-container"></div>
+    <p style="font-size:11px;color:#666;margin:6px 0 0;">Values are n (%) unless otherwise stated. CCI = Charlson Comorbidity Index; IMD = Index of Multiple Deprivation; LOS = length of stay. Day case defined as same-day admission and discharge at spell level.</p>
   </div>
 </div>
 
 <!-- ==================== ICB MAP ==================== -->
 <div class="page" id="page-icb-map">
+  <div class="callout info">
+    <strong>Geographic variation:</strong> This map shows post-discharge 90-day PE or bleeding risk across 42 Integrated Care Boards (ICBs) in England. Crude rates are computed from the selected year range; adjusted rates (from marginal standardisation for 2022–2024) are shown in tooltips and the ranking table where available. Use the sliders to explore how geographic patterns change over time.
+  </div>
   <div class="controls">
     <div class="control-group">
       <label>Joint:</label>
@@ -368,53 +377,63 @@ th.sortable:hover { background: #c5d3e8; }
     <div class="card">
       <div class="card-title">ICB Rankings — <span id="ranking-title">Knee PE</span> (Crude Rate)</div>
       <div class="table-scroll" id="icb-table-container"></div>
+      <p style="font-size:11px;color:#666;margin:6px 0 0;">Click column headers to sort. Crude rate = events / procedures × 100. Adjusted risk uses marginal standardisation (age, sex, CCI) and is only available for 2022–2024. ICBs with <10 events or <100 procedures are suppressed.</p>
     </div>
   </div>
 </div>
 
 <!-- ==================== TRENDS ==================== -->
 <div class="page" id="page-trends">
+  <div class="callout info">
+    <strong>Annual trends:</strong> Age-sex standardised post-discharge 90-day rates for PE and major bleeding, 2006–2024. Rates are directly standardised to the 2006–2009 age-sex distribution. The shaded region marks the COVID-19 pandemic (2020–2021), during which elective surgery was substantially curtailed. 2024 data covers January to September only.
+  </div>
   <div class="grid-2">
     <div class="card">
       <div class="card-title">Age-Sex Standardised Post-Discharge 90-Day PE Rate (%)</div>
       <div class="chart-container"><canvas id="chart-trend-pe" height="300"></canvas></div>
+      <p style="font-size:11px;color:#666;margin:6px 0 0;">Hip PE shows a clear declining trend across the study period. Knee PE declined more modestly. Click legend items to show/hide individual lines.</p>
     </div>
     <div class="card">
       <div class="card-title">Age-Sex Standardised Post-Discharge 90-Day Bleeding Rate (%)</div>
       <div class="chart-container"><canvas id="chart-trend-bleed" height="300"></canvas></div>
+      <p style="font-size:11px;color:#666;margin:6px 0 0;">Major bleeding declined for both joints, likely reflecting shorter anticoagulant courses and increased PPI co-prescription. The 2020 dip reflects reduced elective surgery during lockdowns.</p>
     </div>
   </div>
   <div class="card">
     <div class="card-title">Annual Procedure Volume</div>
     <div class="chart-container"><canvas id="chart-volume" height="250"></canvas></div>
+    <p style="font-size:11px;color:#666;margin:6px 0 0;">Total first elective procedures per year. The sharp drop in 2020 reflects the suspension of elective surgery during the COVID-19 pandemic. 2024 data covers January to September only.</p>
   </div>
 </div>
 
 <!-- ==================== CROSSOVER ==================== -->
 <div class="page" id="page-crossover">
   <div class="callout info">
-    <strong>Self-controlled crossover design:</strong> Each 7-day post-operative block is paired with a matched 7-day control block 180 days later. Odds ratios &gt;1 indicate elevated post-operative risk relative to the patient's own baseline. COVID period (2020–2021) excluded.
+    <strong>Self-controlled crossover design:</strong> Each 7-day post-discharge interval is paired with a matched 7-day control interval exactly 180 days later. Each patient serves as their own control, eliminating confounding by age, sex, comorbidity, and other time-invariant factors. OR &gt;1 indicates elevated risk in the post-discharge period relative to the patient's own baseline. The dotted vertical lines mark the first week at which OR is no longer statistically significant (PE: knee week 11, hip week 14; bleeding: both joints week 6).
   </div>
   <div class="grid-2">
     <div class="card">
       <div class="card-title">Weekly Post-Discharge OR — PE</div>
       <div class="chart-container"><canvas id="chart-xo-pe" height="280"></canvas></div>
+      <p style="font-size:11px;color:#666;margin:6px 0 0;">Hip PE risk remains elevated longer (to ~week 14) than knee PE (to ~week 11), supporting the case for extended prophylaxis after hip replacement. Dashed line: OR = 1 (no excess risk).</p>
     </div>
     <div class="card">
       <div class="card-title">Weekly Post-Discharge OR — Bleeding</div>
       <div class="chart-container"><canvas id="chart-xo-bleed" height="280"></canvas></div>
+      <p style="font-size:11px;color:#666;margin:6px 0 0;">Bleeding risk normalises by week 6 for both joints, creating a window (weeks 7–14) where extended thromboprophylaxis may carry acceptable bleeding risk.</p>
     </div>
   </div>
   <div class="card">
     <div class="card-title">6-Week Block Summary (Table 2)</div>
     <div class="table-scroll" id="xo-table-container"></div>
+    <p style="font-size:11px;color:#666;margin:6px 0 0;">OR from McNemar discordant pairs with exact binomial 95% CI. Each block's post-discharge interval is paired with a matching interval 180 days later. Patients must survive through both windows (minimum 306 days follow-up from discharge).</p>
   </div>
 </div>
 
 <!-- ==================== BLEEDING SUBTYPES ==================== -->
 <div class="page" id="page-subtypes">
   <div class="callout info">
-    <strong>Bleeding subtype definitions</strong> follow Hammami et al. (Heart, 2025). Non-traumatic bleeding is classified into Upper GI, Lower GI, Haemorrhagic stroke, Haematuria, Respiratory, and Other. Note that subtypes are not mutually exclusive — a single event may be coded under multiple subtypes.
+    <strong>Bleeding subtypes:</strong> Post-discharge major bleeding classified per Hammami et al. (Heart 2025) into six non-traumatic subtypes. Upper GI bleeding dominates (~48%), consistent with anticoagulant and NSAID-related gastrointestinal toxicity in this population. Categories are not mutually exclusive.
   </div>
   <div class="grid-2">
     <div class="card">
@@ -429,13 +448,14 @@ th.sortable:hover { background: #c5d3e8; }
   <div class="card">
     <div class="card-title">Subtype Counts and Proportions</div>
     <div class="table-scroll" id="subtype-table-container"></div>
+    <p style="font-size:11px;color:#666;margin:6px 0 0;">Upper GI and haemorrhagic stroke identified from any diagnostic position; lower GI, haematuria, respiratory, and other from primary diagnostic position only.</p>
   </div>
 </div>
 
 <!-- ==================== SENSITIVITY ==================== -->
 <div class="page" id="page-sensitivity">
   <div class="callout info">
-    <strong>Sensitivity analyses</strong> assess the robustness of findings. The COVID sensitivity compares period odds ratios with and without 2020–2021 data. Reference period: 2006–2009.
+    <strong>Sensitivity analysis:</strong> This chart compares adjusted period odds ratios with the COVID-19 pandemic period (2020–2021) excluded or included. Each line represents a joint-outcome combination. Toggle between "COVID excluded" (primary analysis) and "COVID included" to assess robustness. When included, COVID appears as separate unconnected points on the right. OR &lt;1 indicates lower risk compared to the 2006–2009 reference period.
   </div>
   <div class="card">
     <div class="card-title">COVID Sensitivity — Period Odds Ratios (vs 2006–2009)</div>
@@ -448,6 +468,7 @@ th.sortable:hover { background: #c5d3e8; }
       </label>
     </div>
     <div class="chart-container"><canvas id="chart-covid-sens" height="160"></canvas></div>
+    <p style="font-size:11px;color:#666;margin:6px 0 0;">Dashed line: OR = 1 (no change from reference). Adjusted for age, sex, and CCI. Including or excluding COVID-19 admissions does not materially alter the findings, confirming robustness. Click legend items to show/hide outcomes.</p>
   </div>
 </div>
 
