@@ -439,7 +439,7 @@ th.sortable:hover { background: #c5d3e8; }
   </div>
   <div class="card">
     <div class="card-title">COVID Sensitivity — Period Odds Ratios (vs 2006–2009)</div>
-    <div class="chart-container"><canvas id="chart-covid-sens" height="550"></canvas></div>
+    <div class="chart-container"><canvas id="chart-covid-sens" height="380"></canvas></div>
   </div>
 </div>
 
@@ -1119,11 +1119,13 @@ function initSensitivity() {
         const errs = di === 0 ? errExcl : errIncl;
         const meta = chart.getDatasetMeta(di);
         meta.data.forEach((pt, i) => {
-          if (!pt || ds.data[i] === null) return;
+          if (!pt || !ds.data[i] || ds.data[i].x === null) return;
           const err = errs[i];
-          const yPx = pt.y + (di === 0 ? -4 : 4); // offset to avoid overlap
-          const xLo = x.getPixelForValue(ds.data[i] - err[0]);
-          const xHi = x.getPixelForValue(ds.data[i] + err[1]);
+          if (!err) return;
+          const yPx = pt.y;
+          const xVal = ds.data[i].x;
+          const xLo = x.getPixelForValue(xVal - err[0]);
+          const xHi = x.getPixelForValue(xVal + err[1]);
           ctx.save();
           ctx.strokeStyle = ds.borderColor;
           ctx.lineWidth = 1.5;
@@ -1146,9 +1148,9 @@ function initSensitivity() {
     type: 'scatter',
     data: {
       datasets: [
-        {label:'COVID excluded', data: dsExcl.data.map((v,i) => v !== null ? {x:v, y:i-0.12} : null).filter(Boolean),
+        {label:'COVID excluded', data: dsExcl.data.map((v,i) => ({x: v, y: i - 0.12})),
          backgroundColor:'#002147', borderColor:'#002147', pointRadius:5, pointStyle:'circle'},
-        {label:'COVID included', data: dsIncl.data.map((v,i) => v !== null ? {x:v, y:i+0.12} : null).filter(Boolean),
+        {label:'COVID included', data: dsIncl.data.map((v,i) => ({x: v, y: i + 0.12})),
          backgroundColor:'rgba(0,33,71,0.35)', borderColor:'#002147', pointRadius:5, pointStyle:'triangle'}
       ]
     },
