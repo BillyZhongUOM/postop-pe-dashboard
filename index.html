@@ -439,7 +439,15 @@ th.sortable:hover { background: #c5d3e8; }
   </div>
   <div class="card">
     <div class="card-title">COVID Sensitivity — Period Odds Ratios (vs 2006–2009)</div>
-    <div class="chart-container"><canvas id="chart-covid-sens" height="380"></canvas></div>
+    <div style="margin-bottom:10px;">
+      <label style="font-size:13px;margin-right:12px;">
+        <input type="radio" name="covid-toggle" value="excluded" checked onchange="updateSensChart()"> COVID excluded
+      </label>
+      <label style="font-size:13px;">
+        <input type="radio" name="covid-toggle" value="included" onchange="updateSensChart()"> COVID included
+      </label>
+    </div>
+    <div class="chart-container"><canvas id="chart-covid-sens" height="320"></canvas></div>
   </div>
 </div>
 
@@ -1077,66 +1085,76 @@ function initSubtypes() {
 }
 
 // ===== 6. SENSITIVITY =====
+let sensChart = null;
+
 function initSensitivity() {
+  updateSensChart();
+}
+
+function updateSensChart() {
   const sc = DATA.sensitivity_covid;
-  // Forest plot: each row = joint + outcome + period, two points per row (excluded/included)
-  const periods = [...new Set(sc.map(r => r.period))].filter(p => p !== '2006-2009');
+  const covidMode = document.querySelector('input[name="covid-toggle"]:checked').value;
+  const covLabel = covidMode === 'excluded' ? 'Excluded' : 'Included';
+
+  // X-axis: periods in order. If "included", add COVID period at the end
+  const basePeriods = ['2010-2014', '2015-2019', '2022-2024'];
+  const xLabels = covidMode === 'included'
+    ? [...basePeriods, 'COVID']
+    : [...basePeriods];
+
   const combos = [
-    {jt:'Knee', out:'PE', color:COLORS.kneePE},
-    {jt:'Knee', out:'Bleeding', color:COLORS.kneeBleed},
-    {jt:'Hip', out:'PE', color:COLORS.hipPE},
-    {jt:'Hip', out:'Bleeding', color:COLORS.hipBleed}
+    {jt:'Knee', out:'PE', label:'Knee PE', color:COLORS.kneePE, dash:[]},
+    {jt:'Knee', out:'Bleeding', label:'Knee Bleeding', color:COLORS.kneeBleed, dash:[]},
+    {jt:'Hip', out:'PE', label:'Hip PE', color:COLORS.hipPE, dash:[5,5]},
+    {jt:'Hip', out:'Bleeding', label:'Hip Bleeding', color:COLORS.hipBleed, dash:[5,5]}
   ];
 
-  // Build forest plot rows: label on y-axis, OR on x-axis with error bars
-  const labels = [];
-  const dsExcl = {label:'COVID excluded', data:[], backgroundColor:'rgba(0,33,71,0.8)',
-    borderColor:'#002147', pointStyle:'circle', pointRadius:5};
-  const dsIncl = {label:'COVID included', data:[], backgroundColor:'rgba(0,33,71,0.25)',
-    borderColor:'#002147', pointStyle:'triangle', pointRadius:5};
-  const errExcl = [];
-  const errIncl = [];
-
-  combos.forEach(c => {
-    periods.forEach(p => {
-      const rowLabel = `${c.jt} ${c.out} — ${p}`;
-      labels.push(rowLabel);
-      const re = sc.find(r => r.joint===c.jt && r.outcome===c.out && r.covid==='Excluded' && r.period===p);
-      const ri = sc.find(r => r.joint===c.jt && r.outcome===c.out && r.covid==='Included' && r.period===p);
-      dsExcl.data.push(re ? +re.OR : null);
-      dsIncl.data.push(ri ? +ri.OR : null);
-      errExcl.push(re ? [+re.OR - +re.OR_lower, +re.OR_upper - +re.OR] : [0,0]);
-      errIncl.push(ri ? [+ri.OR - +ri.OR_lower, +ri.OR_upper - +ri.OR] : [0,0]);
+  // Build datasets with error bars stored per-point
+  const datasets = combos.map(c => {
+    const points = xLabels.map(p => {
+      const r = sc.find(x => x.joint===c.jt && x.outcome===c.out && x.covid===covLabel && x.period===p);
+      if (!r) return null;
+      return { or: +r.OR, lo: +r.OR_lower, hi: +r.OR_upper };
     });
+    return {
+      label: c.label,
+      data: points.map(p => p ? p.or : null),
+      borderColor: c.color,
+      backgroundColor: c.color,
+      pointRadius: 5,
+      pointHoverRadius: 7,
+      borderDash: c.dash,
+      tension: 0,
+      showLine: true,
+      _errLo: points.map(p => p ? p.or - p.lo : 0),
+      _errHi: points.map(p => p ? p.hi - p.or : 0),
+    };
   });
 
-  // Custom error bar plugin for horizontal forest plot
-  const errBarPlugin = {
-    id: 'forestErrBars',
+  // Error bar plugin
+  const errPlugin = {
+    id: 'vertErrBars',
     afterDatasetsDraw(chart) {
-      const {ctx, scales: {x, y}} = chart;
+      const {ctx} = chart;
       chart.data.datasets.forEach((ds, di) => {
-        const errs = di === 0 ? errExcl : errIncl;
         const meta = chart.getDatasetMeta(di);
         meta.data.forEach((pt, i) => {
-          if (!pt || !ds.data[i] || ds.data[i].x === null) return;
-          const err = errs[i];
-          if (!err) return;
-          const yPx = pt.y;
-          const xVal = ds.data[i].x;
-          const xLo = x.getPixelForValue(xVal - err[0]);
-          const xHi = x.getPixelForValue(xVal + err[1]);
+          if (!pt || ds.data[i] === null) return;
+          const eLo = ds._errLo[i], eHi = ds._errHi[i];
+          if (!eLo && !eHi) return;
+          const yLo = chart.scales.y.getPixelForValue(ds.data[i] - eLo);
+          const yHi = chart.scales.y.getPixelForValue(ds.data[i] + eHi);
           ctx.save();
           ctx.strokeStyle = ds.borderColor;
           ctx.lineWidth = 1.5;
-          ctx.globalAlpha = di === 0 ? 0.9 : 0.5;
+          // Vertical line
           ctx.beginPath();
-          ctx.moveTo(xLo, yPx); ctx.lineTo(xHi, yPx);
+          ctx.moveTo(pt.x, yLo); ctx.lineTo(pt.x, yHi);
           ctx.stroke();
           // Whiskers
           ctx.beginPath();
-          ctx.moveTo(xLo, yPx-3); ctx.lineTo(xLo, yPx+3);
-          ctx.moveTo(xHi, yPx-3); ctx.lineTo(xHi, yPx+3);
+          ctx.moveTo(pt.x-4, yLo); ctx.lineTo(pt.x+4, yLo);
+          ctx.moveTo(pt.x-4, yHi); ctx.lineTo(pt.x+4, yHi);
           ctx.stroke();
           ctx.restore();
         });
@@ -1144,53 +1162,47 @@ function initSensitivity() {
     }
   };
 
-  new Chart(document.getElementById('chart-covid-sens'), {
-    type: 'scatter',
-    data: {
-      datasets: [
-        {label:'COVID excluded', data: dsExcl.data.map((v,i) => ({x: v, y: i - 0.12})),
-         backgroundColor:'#002147', borderColor:'#002147', pointRadius:5, pointStyle:'circle'},
-        {label:'COVID included', data: dsIncl.data.map((v,i) => ({x: v, y: i + 0.12})),
-         backgroundColor:'rgba(0,33,71,0.35)', borderColor:'#002147', pointRadius:5, pointStyle:'triangle'}
-      ]
-    },
+  if (sensChart) sensChart.destroy();
+
+  sensChart = new Chart(document.getElementById('chart-covid-sens'), {
+    type: 'line',
+    data: { labels: xLabels, datasets },
     options: {
       responsive: true,
       plugins: {
-        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 12 } },
+        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14 } },
         tooltip: {
           callbacks: {
             label: ctx => {
-              const idx = Math.round(ctx.parsed.y + (ctx.datasetIndex === 0 ? 0.12 : -0.12));
-              const errs = ctx.datasetIndex === 0 ? errExcl : errIncl;
-              const or = ctx.parsed.x;
-              if (!errs[idx]) return `OR: ${or.toFixed(3)}`;
-              return `OR: ${or.toFixed(3)} (${(or - errs[idx][0]).toFixed(3)}–${(or + errs[idx][1]).toFixed(3)})`;
+              const ds = ctx.dataset;
+              const i = ctx.dataIndex;
+              const or = ds.data[i];
+              if (or === null) return '';
+              const lo = (or - ds._errLo[i]).toFixed(3);
+              const hi = (or + ds._errHi[i]).toFixed(3);
+              return `${ds.label}: ${or.toFixed(3)} (${lo}–${hi})`;
             }
           }
         }
       },
       scales: {
-        x: { title: { display: true, text: 'Odds Ratio (vs 2006–2009)' },
-             min: 0.4, max: 1.2 },
-        y: { reverse: true, min: -0.5, max: labels.length - 0.5,
-             ticks: { callback: (v) => labels[Math.round(v)] || '', stepSize: 1, font: { size: 10 } },
-             grid: { display: false } }
+        y: { title: { display: true, text: 'Adjusted OR (vs 2006–2009)' } },
+        x: { title: { display: true, text: 'Period' } }
       }
     },
-    plugins: [errBarPlugin, {
-      id: 'refLineVert',
+    plugins: [errPlugin, {
+      id: 'refLineHoriz',
       beforeDraw(chart) {
-        const {ctx, chartArea, scales: {x}} = chart;
-        const xPos = x.getPixelForValue(1);
-        if (xPos >= chartArea.left && xPos <= chartArea.right) {
+        const {ctx, chartArea, scales: {y}} = chart;
+        const yPos = y.getPixelForValue(1);
+        if (yPos >= chartArea.top && yPos <= chartArea.bottom) {
           ctx.save();
           ctx.setLineDash([5,5]);
           ctx.strokeStyle = 'rgba(150,150,150,0.6)';
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.moveTo(xPos, chartArea.top);
-          ctx.lineTo(xPos, chartArea.bottom);
+          ctx.moveTo(chartArea.left, yPos);
+          ctx.lineTo(chartArea.right, yPos);
           ctx.stroke();
           ctx.restore();
         }
