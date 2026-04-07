@@ -1157,6 +1157,7 @@ function updateSensChart() {
     afterDatasetsDraw(chart) {
       const {ctx} = chart;
       chart.data.datasets.forEach((ds, di) => {
+        if (!chart.isDatasetVisible(di)) return;
         const meta = chart.getDatasetMeta(di);
         meta.data.forEach((pt, i) => {
           if (!pt || ds.data[i] === null) return;
@@ -1191,7 +1192,23 @@ function updateSensChart() {
       responsive: true,
       plugins: {
         legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14,
-          filter: item => !item.text.includes('(COVID)') } },
+          filter: item => !item.text.includes('(COVID)') },
+          onClick: (e, legendItem, legend) => {
+            const ci = legendItem.datasetIndex;
+            const chart = legend.chart;
+            // Toggle main dataset
+            const meta = chart.getDatasetMeta(ci);
+            meta.hidden = !meta.hidden;
+            // Find and toggle matching COVID dataset
+            const mainLabel = chart.data.datasets[ci].label;
+            chart.data.datasets.forEach((ds, di) => {
+              if (ds.label === mainLabel + ' (COVID)') {
+                chart.getDatasetMeta(di).hidden = meta.hidden;
+              }
+            });
+            chart.update();
+          }
+        },
         tooltip: {
           callbacks: {
             label: ctx => {
