@@ -3,105 +3,190 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Postoperative PE &amp; Bleeding Dashboard — NDPH, University of Oxford</title>
+<title>Postoperative PE &amp; Bleeding Dashboard — AHRU, NDPH, University of Oxford</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;500;600;700;800&family=Raleway:wght@400;500;600;700&display=swap"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
+/* AHRU / NDPH Oxford visual identity
+   Primary navy #051e41 (NDPH house navy)
+   Accent off-red #f1290a
+   Warm off-white #F7F6F5
+   Typography: Mulish (body), Raleway (display)
+*/
 :root {
-  --oxford-blue: #002147;
-  --oxford-blue-light: #1a3a5c;
-  --oxford-blue-pale: #e8edf2;
-  --oxford-red: #AA1A2D;
-  --oxford-coral: #FE615A;
-  --oxford-green: #426A5A;
-  --oxford-ocean: #789E9E;
-  --oxford-mauve: #776885;
-  --oxford-sky: #B9D6F2;
-  --oxford-sage: #A0AF84;
-  --pe-color: #002147;
-  --bleed-color: #AA1A2D;
-  --knee-color: #426A5A;
-  --hip-color: #E08D79;
-  --bg: #f7f8fa;
-  --card-bg: #ffffff;
-  --border: #dde2e8;
-  --text: #1a1a2e;
-  --text-muted: #6b7280;
-  --font: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+  /* Core AHRU brand */
+  --ahru-navy:        #051e41;
+  --ahru-navy-soft:   #0c2d5c;
+  --ahru-navy-pale:   #e8ecf3;
+  --ahru-accent:      #f1290a;
+  --ahru-accent-soft: #fce6e1;
+  --ahru-offwhite:    #F7F6F5;
+  --ahru-warm:        #f2efeb;
+  --ahru-border:      #dfe1e4;
+  --ahru-text:        #111827;
+  --ahru-text-muted:  #5b6573;
+
+  /* Outcome and procedure palette */
+  --pe-color:     #051e41;   /* PE: navy */
+  --bleed-color:  #a11d19;   /* Bleeding: deep red */
+  --tkr-color:    #426A5A;   /* TKR: forest green */
+  --thr-color:    #b5651d;   /* THR: warm ochre */
+
+  /* Legacy aliases (kept so existing rules continue to work) */
+  --oxford-blue:       var(--ahru-navy);
+  --oxford-blue-light: var(--ahru-navy-soft);
+  --oxford-blue-pale:  var(--ahru-navy-pale);
+  --oxford-red:        var(--ahru-accent);
+  --oxford-coral:      #FE615A;
+  --oxford-green:      var(--tkr-color);
+  --oxford-ocean:      #789E9E;
+  --oxford-mauve:      #776885;
+  --oxford-sky:        #B9D6F2;
+  --oxford-sage:       #A0AF84;
+  --knee-color:        var(--tkr-color);
+  --hip-color:         var(--thr-color);
+
+  --bg:         var(--ahru-offwhite);
+  --card-bg:    #ffffff;
+  --border:     var(--ahru-border);
+  --text:       var(--ahru-text);
+  --text-muted: var(--ahru-text-muted);
+
+  --font:         "Mulish", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Raleway", "Mulish", "Helvetica Neue", Arial, sans-serif;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.55; }
 
-/* Header */
+/* Header — AHRU navy banner with off-red accent strip */
 .header {
-  background: var(--oxford-blue);
-  color: white;
-  padding: 16px 32px;
+  background: var(--ahru-navy);
+  color: #fff;
+  padding: 22px 40px 20px;
   display: flex;
   align-items: center;
-  gap: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  gap: 28px;
+  border-bottom: 3px solid var(--ahru-accent);
+  position: relative;
+}
+.header::after {
+  content: "";
+  position: absolute;
+  left: 40px; bottom: -3px;
+  width: 72px; height: 3px;
+  background: #fff;
 }
 .header-logo {
-  font-size: 13px;
-  opacity: 0.85;
-  border-right: 1px solid rgba(255,255,255,0.3);
-  padding-right: 20px;
-  line-height: 1.3;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  opacity: 0.95;
+  border-right: 1px solid rgba(255,255,255,0.25);
+  padding-right: 24px;
+  line-height: 1.45;
 }
-.header-logo strong { font-size: 14px; display: block; opacity: 1; }
+.header-logo strong {
+  font-size: 14px;
+  display: block;
+  letter-spacing: 0.3px;
+  text-transform: none;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.header-logo .unit-tag {
+  display: inline-block;
+  background: var(--ahru-accent);
+  color: #fff;
+  padding: 2px 7px;
+  border-radius: 2px;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  margin-top: 4px;
+}
 .header-title { flex: 1; }
-.header-title h1 { font-size: 18px; font-weight: 600; letter-spacing: 0.3px; }
-.header-title p { font-size: 12px; opacity: 0.75; margin-top: 2px; }
+.header-title h1 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  line-height: 1.25;
+}
+.header-title p {
+  font-size: 12px;
+  opacity: 0.78;
+  margin-top: 6px;
+  letter-spacing: 0.15px;
+}
 
-/* Navigation tabs */
+/* Navigation tabs — sticky, quiet strip below the banner */
 .nav-tabs {
-  background: white;
-  border-bottom: 2px solid var(--border);
+  background: #fff;
+  border-bottom: 1px solid var(--ahru-border);
   display: flex;
-  padding: 0 32px;
+  padding: 0 40px;
   gap: 0;
   overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 1px 2px rgba(5, 30, 65, 0.04);
 }
 .nav-tab {
-  padding: 12px 20px;
+  padding: 14px 22px;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
   color: var(--text-muted);
   border-bottom: 3px solid transparent;
-  transition: all 0.2s;
+  transition: color .18s ease, border-color .18s ease, background .18s ease;
   white-space: nowrap;
   user-select: none;
 }
-.nav-tab:hover { color: var(--oxford-blue); background: var(--oxford-blue-pale); }
+.nav-tab:hover { color: var(--ahru-navy); background: var(--ahru-navy-pale); }
 .nav-tab.active {
-  color: var(--oxford-blue);
-  border-bottom-color: var(--oxford-blue);
-  font-weight: 600;
+  color: var(--ahru-navy);
+  border-bottom-color: var(--ahru-accent);
 }
 
 /* Page containers */
-.page { display: none; padding: 24px 32px; }
+.page { display: none; padding: 28px 40px 40px; max-width: 1480px; margin: 0 auto; }
 .page.active { display: block; }
 
-/* Cards */
+/* Cards — clean editorial surface with subtle top accent */
 .card {
   background: var(--card-bg);
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  border-radius: 4px;
+  border: 1px solid var(--ahru-border);
+  padding: 22px 24px 20px;
+  margin-bottom: 22px;
+  box-shadow: 0 1px 2px rgba(5, 30, 65, 0.035);
+  position: relative;
+}
+.card::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0;
+  width: 36px; height: 2px;
+  background: var(--ahru-accent);
 }
 .card-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--oxford-blue);
-  margin-bottom: 14px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #eee;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--ahru-navy);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eef0f3;
 }
 
 /* Grid layouts */
@@ -110,70 +195,105 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .grid-map { display: grid; grid-template-columns: 3fr 2fr; gap: 20px; }
 
-/* Value boxes */
+/* Value boxes — numbers in Raleway, strong visual hierarchy */
 .value-box {
   background: var(--card-bg);
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--oxford-blue);
-  padding: 16px 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  border-radius: 4px;
+  border: 1px solid var(--ahru-border);
+  border-left: 3px solid var(--ahru-navy);
+  padding: 18px 22px;
+  box-shadow: 0 1px 2px rgba(5, 30, 65, 0.03);
+  transition: transform .18s ease, box-shadow .18s ease;
 }
-.value-box .vb-label { font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-.value-box .vb-value { font-size: 26px; font-weight: 700; color: var(--oxford-blue); margin-top: 4px; }
-.value-box .vb-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.value-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(5, 30, 65, 0.08);
+}
+.value-box .vb-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+.value-box .vb-value {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--ahru-navy);
+  margin-top: 6px;
+  letter-spacing: -0.5px;
+}
+.value-box .vb-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 .value-box.pe { border-left-color: var(--pe-color); }
 .value-box.pe .vb-value { color: var(--pe-color); }
 .value-box.bleed { border-left-color: var(--bleed-color); }
 .value-box.bleed .vb-value { color: var(--bleed-color); }
-.value-box.knee { border-left-color: var(--knee-color); }
-.value-box.knee .vb-value { color: var(--knee-color); }
-.value-box.hip { border-left-color: var(--hip-color); }
-.value-box.hip .vb-value { color: var(--hip-color); }
+.value-box.knee { border-left-color: var(--tkr-color); }
+.value-box.knee .vb-value { color: var(--tkr-color); }
+.value-box.hip { border-left-color: var(--thr-color); }
+.value-box.hip .vb-value { color: var(--thr-color); }
 
-/* Controls panel */
+/* Controls panel — warm off-white rail aligned with AHRU palette */
 .controls {
-  background: var(--oxford-blue-pale);
-  border-radius: 8px;
-  padding: 16px 20px;
-  margin-bottom: 20px;
+  background: var(--ahru-warm);
+  border: 1px solid var(--ahru-border);
+  border-left: 3px solid var(--ahru-navy);
+  border-radius: 4px;
+  padding: 16px 22px;
+  margin-bottom: 22px;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 28px;
   flex-wrap: wrap;
 }
-.control-group { display: flex; align-items: center; gap: 8px; }
+.control-group { display: flex; align-items: center; gap: 10px; }
 .control-group label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--oxford-blue);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ahru-navy);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.1px;
 }
 .control-group select, .control-group input[type="range"] {
   font-family: var(--font);
   font-size: 13px;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  padding: 7px 12px;
+  border: 1px solid var(--ahru-border);
+  border-radius: 3px;
   background: white;
+  color: var(--ahru-text);
 }
-.control-group select { cursor: pointer; }
-.control-group input[type="range"] { width: 120px; cursor: pointer; accent-color: var(--oxford-blue); }
+.control-group select {
+  cursor: pointer;
+  min-width: 160px;
+}
+.control-group select:focus {
+  outline: none;
+  border-color: var(--ahru-navy);
+  box-shadow: 0 0 0 2px var(--ahru-navy-pale);
+}
+.control-group input[type="range"] { width: 140px; cursor: pointer; accent-color: var(--ahru-accent); }
 .year-display {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--oxford-blue);
-  min-width: 40px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ahru-navy);
+  min-width: 44px;
   text-align: center;
 }
 .disclosure-badge {
-  background: var(--oxford-red);
+  background: var(--ahru-accent);
   color: white;
+  font-family: var(--font-display);
   font-size: 10px;
-  padding: 3px 8px;
-  border-radius: 10px;
-  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 2px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 .info-text {
   font-size: 11px;
@@ -247,30 +367,51 @@ th.sortable:hover { background: #c5d3e8; }
 .chart-container { position: relative; width: 100%; }
 .chart-container canvas { width: 100% !important; }
 
-/* Callout */
+/* Callout — quiet editorial note strip */
 .callout {
   background: #fff9e6;
-  border-left: 4px solid #e2c044;
-  padding: 12px 16px;
-  border-radius: 0 6px 6px 0;
-  margin-bottom: 16px;
-  font-size: 12px;
+  border-left: 3px solid #e2c044;
+  padding: 14px 18px;
+  border-radius: 0 3px 3px 0;
+  margin-bottom: 18px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ahru-text);
 }
 .callout.info {
-  background: #e8f4fd;
-  border-left-color: var(--oxford-blue);
+  background: var(--ahru-warm);
+  border-left-color: var(--ahru-navy);
+}
+.callout strong {
+  color: var(--ahru-navy);
+  font-weight: 700;
 }
 
-/* Footer */
+/* Footer — AHRU navy with accent top line */
 .footer {
-  background: var(--oxford-blue);
-  color: rgba(255,255,255,0.7);
-  padding: 16px 32px;
+  background: var(--ahru-navy);
+  color: rgba(255,255,255,0.72);
+  padding: 24px 40px;
+  font-family: var(--font-display);
   font-size: 11px;
+  letter-spacing: 0.3px;
   text-align: center;
-  margin-top: 40px;
+  margin-top: 48px;
+  border-top: 3px solid var(--ahru-accent);
+  line-height: 1.7;
 }
-.footer a { color: var(--oxford-sky); }
+.footer a {
+  color: #fff;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(255,255,255,0.4);
+}
+.footer a:hover { border-bottom-style: solid; color: var(--ahru-accent-soft); }
+.footer .foot-row { margin-bottom: 6px; }
+.footer .foot-row:first-child {
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
 
 /* Responsive */
 @media (max-width: 900px) {
@@ -288,11 +429,12 @@ th.sortable:hover { background: #c5d3e8; }
 <div class="header">
   <div class="header-logo">
     <strong>University of Oxford</strong>
-    Nuffield Department of Population Health (NDPH)
+    Nuffield Department of Population Health
+    <span class="unit-tag">AHRU</span>
   </div>
   <div class="header-title">
-    <h1>Postoperative PE &amp; Bleeding After Elective Joint Replacement</h1>
-    <p>England, 2006–2024 &nbsp;|&nbsp; HES-APC linked to ONS Deaths &nbsp;|&nbsp; Billy Zhong</p>
+    <h1>Postoperative pulmonary embolism and major bleeding following elective joint replacement</h1>
+    <p>England, 2006 to 2024 &nbsp;·&nbsp; HES-APC linked to ONS death records &nbsp;·&nbsp; Applied Health Research Unit</p>
   </div>
 </div>
 
@@ -315,7 +457,7 @@ th.sortable:hover { background: #c5d3e8; }
     <div class="card">
       <div class="card-title">Adjusted Risk by Period (Post-Discharge 90-Day)</div>
       <div class="chart-container"><canvas id="chart-period-risk" height="280"></canvas></div>
-      <p style="font-size:11px;color:#666;margin:6px 0 0;">Adjusted by age, sex, and Charlson Comorbidity Index. Reference period: 2006–2009. COVID period (2020–2021) excluded. Hip PE risk halved over the study period; knee PE decline was not statistically significant.</p>
+      <p style="font-size:11px;color:#666;margin:6px 0 0;">Adjusted by age, sex, and Charlson Comorbidity Index. Reference period: 2006–2009. COVID period (2020–2021) excluded. PE risk following THR halved over the study period; the decline in PE following TKR was not statistically significant in the post-discharge analysis alone.</p>
     </div>
     <div class="card">
       <div class="card-title">Bleeding Subtypes — Post-Discharge 90-Day Events</div>
@@ -340,10 +482,10 @@ th.sortable:hover { background: #c5d3e8; }
   </div>
   <div class="controls">
     <div class="control-group">
-      <label>Joint:</label>
+      <label>Procedure:</label>
       <select id="ctrl-joint">
-        <option value="Knee">Knee replacement</option>
-        <option value="Hip">Hip replacement</option>
+        <option value="Knee">Total knee replacement (TKR)</option>
+        <option value="Hip">Total hip replacement (THR)</option>
       </select>
     </div>
     <div class="control-group">
@@ -375,7 +517,7 @@ th.sortable:hover { background: #c5d3e8; }
       <div id="icb-map"></div>
     </div>
     <div class="card">
-      <div class="card-title">ICB Rankings — <span id="ranking-title">Knee PE</span> (Crude Rate)</div>
+      <div class="card-title">ICB Rankings — <span id="ranking-title">PE following TKR</span> (Crude Rate)</div>
       <div class="table-scroll" id="icb-table-container"></div>
       <p style="font-size:11px;color:#666;margin:6px 0 0;">Click column headers to sort. Crude rate = events / procedures × 100. Adjusted risk (by age, sex, CCI) is only available for 2022–2024. ICBs with <10 events or <100 procedures are suppressed.</p>
     </div>
@@ -391,7 +533,7 @@ th.sortable:hover { background: #c5d3e8; }
     <div class="card">
       <div class="card-title">Age-Sex Standardised Post-Discharge 90-Day PE Rate (%)</div>
       <div class="chart-container"><canvas id="chart-trend-pe" height="300"></canvas></div>
-      <p style="font-size:11px;color:#666;margin:6px 0 0;">Hip PE shows a clear declining trend across the study period. Knee PE declined more modestly. Click legend items to show/hide individual lines.</p>
+      <p style="font-size:11px;color:#666;margin:6px 0 0;">PE following THR shows a clear declining trend across the study period. The decline in PE following TKR was more modest. Click legend items to show or hide individual lines.</p>
     </div>
     <div class="card">
       <div class="card-title">Age-Sex Standardised Post-Discharge 90-Day Bleeding Rate (%)</div>
@@ -415,7 +557,7 @@ th.sortable:hover { background: #c5d3e8; }
     <div class="card">
       <div class="card-title">Weekly Post-Discharge OR — PE</div>
       <div class="chart-container"><canvas id="chart-xo-pe" height="280"></canvas></div>
-      <p style="font-size:11px;color:#666;margin:6px 0 0;">Hip PE risk remains elevated longer (to ~week 14) than knee PE (to ~week 11), supporting the case for extended prophylaxis after hip replacement. Dashed line: OR = 1 (no excess risk).</p>
+      <p style="font-size:11px;color:#666;margin:6px 0 0;">PE risk following THR remains elevated longer (to ~week 14) than PE following TKR (to ~week 11). Whether this supports extended prophylaxis requires randomised evidence. Dashed line: OR = 1 (no excess risk).</p>
     </div>
     <div class="card">
       <div class="card-title">Weekly Post-Discharge OR — Bleeding</div>
@@ -437,11 +579,11 @@ th.sortable:hover { background: #c5d3e8; }
   </div>
   <div class="grid-2">
     <div class="card">
-      <div class="card-title">Bleeding Subtypes — Knee Replacement</div>
+      <div class="card-title">Bleeding Subtypes — Following TKR</div>
       <div class="chart-container"><canvas id="chart-sub-knee" height="300"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-title">Bleeding Subtypes — Hip Replacement</div>
+      <div class="card-title">Bleeding Subtypes — Following THR</div>
       <div class="chart-container"><canvas id="chart-sub-hip" height="300"></canvas></div>
     </div>
   </div>
@@ -473,9 +615,14 @@ th.sortable:hover { background: #c5d3e8; }
 </div>
 
 <div class="footer">
-  Billy Zhong &nbsp;|&nbsp; Nuffield Department of Population Health (NDPH) &nbsp;|&nbsp; University of Oxford<br>
-  Data source: Hospital Episode Statistics – Admitted Patient Care (HES-APC) linked to ONS death records &nbsp;|&nbsp;
-  <a href="https://www.ndph.ox.ac.uk/research/research-groups/applied-health-research-unit-ahru" target="_blank">AHRU Website</a>
+  <div class="foot-row">Applied Health Research Unit &nbsp;·&nbsp; Nuffield Department of Population Health &nbsp;·&nbsp; University of Oxford</div>
+  <div class="foot-row">Data source: Hospital Episode Statistics — Admitted Patient Care (HES-APC) linked to Office for National Statistics death records</div>
+  <div class="foot-row">This dashboard is a research tool for local benchmarking and is not a performance-ranking tool. Apparent differences between ICBs reflect case-mix, local coding practice, and service configuration.</div>
+  <div class="foot-row">
+    <a href="https://www.ndph.ox.ac.uk/research/research-groups/applied-health-research-unit-ahru" target="_blank" rel="noopener">AHRU website</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/BillyZhongUOM/postoperative-pe-bleeding" target="_blank" rel="noopener">Project repository</a>
+  </div>
 </div>
 
 <script>
@@ -518,11 +665,21 @@ function fmt(n) { return Number(n).toLocaleString('en-GB'); }
 function fmtPct(n, dp=2) { return (Number(n)).toFixed(dp) + '%'; }
 function fmtRate(n, dp=3) { return (Number(n) * 100).toFixed(dp) + '%'; }
 
+// AHRU / NDPH Oxford palette
 const COLORS = {
-  pe: '#002147', bleed: '#AA1A2D', knee: '#426A5A', hip: '#E08D79',
-  kneePE: '#002147', kneeBleed: '#AA1A2D', hipPE: '#789E9E', hipBleed: '#E08D79',
-  covid: 'rgba(150,150,150,0.15)'
+  pe: '#051e41', bleed: '#a11d19', knee: '#426A5A', hip: '#b5651d',
+  kneePE: '#051e41', kneeBleed: '#a11d19', hipPE: '#789E9E', hipBleed: '#b5651d',
+  covid: 'rgba(150,150,150,0.15)',
+  navy: '#051e41', accent: '#f1290a'
 };
+
+// Reviewer-approved nomenclature helpers (Susie Shapiro, Round 02 #47, #57, #61, #62, #65, #99)
+const JOINT_FULL  = { Knee: 'Total knee replacement (TKR)', Hip: 'Total hip replacement (THR)' };
+const JOINT_SHORT = { Knee: 'TKR', Hip: 'THR' };
+const OUTCOME_DISP = { PE: 'PE', Bleeding: 'Bleeding' };
+function comboLabel(joint, outcome) {
+  return `${OUTCOME_DISP[outcome] || outcome} following ${JOINT_SHORT[joint] || joint}`;
+}
 
 function covidAnnotation(chart) {
   return {
@@ -588,7 +745,7 @@ function initOverview() {
   const makeDS = (joint, outcome, color, dash) => {
     const rows = rp.filter(r => r.joint === joint && r.outcome === outcome);
     return {
-      label: `${joint} ${outcome}`,
+      label: comboLabel(joint, outcome),
       data: periods.map(p => { const r = rows.find(x => x.period === p); return r ? +(r.risk * 100).toFixed(4) : null; }),
       borderColor: color, backgroundColor: color + '22',
       pointRadius: 5, pointHoverRadius: 7, tension: 0.3,
@@ -720,7 +877,7 @@ function updateICBMap() {
   const startYr = +document.getElementById('ctrl-year-start').value;
   const endYr = +document.getElementById('ctrl-year-end').value;
 
-  document.getElementById('ranking-title').textContent = `${joint} ${outcome}`;
+  document.getElementById('ranking-title').textContent = comboLabel(joint, outcome);
 
   // Aggregate ICB data for selected range
   const filtered = ICB_AGG.filter(r => r.jt === joint && r.yr >= startYr && r.yr <= endYr);
@@ -918,7 +1075,7 @@ function initTrends() {
         ? (outcome === 'PE' ? COLORS.kneePE : COLORS.kneeBleed)
         : (outcome === 'PE' ? COLORS.hipPE : COLORS.hipBleed);
       return {
-        label: jt,
+        label: JOINT_SHORT[jt],
         data: years.map(y => { const r = rows.find(x => +x.year === y); return r ? +Number(r.std_rate).toFixed(4) : null; }),
         borderColor: color, backgroundColor: color + '22',
         pointRadius: 3, pointHoverRadius: 6, tension: 0.2,
@@ -957,7 +1114,7 @@ function initTrends() {
     data: {
       labels: volYears,
       datasets: ['Knee', 'Hip'].map(jt => ({
-        label: jt,
+        label: JOINT_SHORT[jt],
         data: volYears.map(y => { const r = vol.find(x => +x.year === y && x.joint === jt); return r ? +r.n : 0; }),
         backgroundColor: jt === 'Knee' ? COLORS.knee + 'bb' : COLORS.hip + 'bb',
         borderColor: jt === 'Knee' ? COLORS.knee : COLORS.hip,
@@ -987,7 +1144,7 @@ function initCrossover() {
       const rows = xo.filter(r => r.joint === jt && r.outcome === outcome);
       const color = jt === 'Knee' ? COLORS.kneePE : COLORS.hipPE;
       return {
-        label: jt,
+        label: JOINT_SHORT[jt],
         data: rows.map(r => ({ x: +r.week, y: +Number(r.OR).toFixed(3) })),
         borderColor: color, backgroundColor: color + '22',
         pointRadius: 4, pointHoverRadius: 7, tension: 0.2,
@@ -1124,10 +1281,10 @@ function updateSensChart() {
     : [...basePeriods];
 
   const combos = [
-    {jt:'Knee', out:'PE', label:'Knee PE', color:COLORS.kneePE, dash:[]},
-    {jt:'Knee', out:'Bleeding', label:'Knee Bleeding', color:COLORS.kneeBleed, dash:[]},
-    {jt:'Hip', out:'PE', label:'Hip PE', color:COLORS.hipPE, dash:[5,5]},
-    {jt:'Hip', out:'Bleeding', label:'Hip Bleeding', color:COLORS.hipBleed, dash:[5,5]}
+    {jt:'Knee', out:'PE', label:'PE following TKR', color:COLORS.kneePE, dash:[]},
+    {jt:'Knee', out:'Bleeding', label:'Bleeding following TKR', color:COLORS.kneeBleed, dash:[]},
+    {jt:'Hip', out:'PE', label:'PE following THR', color:COLORS.hipPE, dash:[5,5]},
+    {jt:'Hip', out:'Bleeding', label:'Bleeding following THR', color:COLORS.hipBleed, dash:[5,5]}
   ];
 
   // Build datasets: main periods as connected line, COVID as separate point
