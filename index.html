@@ -541,8 +541,8 @@ th.sortable:hover { background: #c5d3e8; }
     <div class="card">
       <div class="card-title">Bleeding Subtypes, Post-Discharge 90-Day Events</div>
       <div class="grid-2">
-        <div class="chart-container"><canvas id="chart-bleed-knee" height="240"></canvas></div>
-        <div class="chart-container"><canvas id="chart-bleed-hip" height="240"></canvas></div>
+        <div class="chart-container" style="height:320px;"><canvas id="chart-bleed-knee"></canvas></div>
+        <div class="chart-container" style="height:320px;"><canvas id="chart-bleed-hip"></canvas></div>
       </div>
       <p style="font-size:11px;color:#666;margin:6px 0 0;">Classification per Hammami et al. (Heart 2025). Upper GI bleeding is the dominant subtype (~48%), consistent with anticoagulant and NSAID-related gastrointestinal toxicity. Categories are not mutually exclusive.</p>
     </div>
@@ -550,7 +550,7 @@ th.sortable:hover { background: #c5d3e8; }
   <div class="card">
     <div class="card-title">Baseline Characteristics</div>
     <div class="table-scroll" id="table1-container"></div>
-    <p style="font-size:11px;color:#666;margin:6px 0 0;">Values are n (%) unless otherwise stated. CCI = Charlson Comorbidity Index; IMD = Index of Multiple Deprivation; LOS = length of stay. Day case defined as same-day admission and discharge at spell level.</p>
+    <p style="font-size:11px;color:#666;margin:6px 0 0;">Values are n (%) unless otherwise stated. CCI = Charlson Comorbidity Index; IMD = Index of Multiple Deprivation; LOS = length of stay. Day case defined as admission and discharge on the same day.</p>
   </div>
 </div>
 
@@ -611,11 +611,6 @@ th.sortable:hover { background: #c5d3e8; }
       <div class="table-scroll" id="icb-table-container"></div>
       <p style="font-size:11px;color:#666;margin:6px 0 0;" id="icb-table-note">Click column headers to sort. The standardised rate is indirectly standardised for age, sex, and Charlson Comorbidity Index to the national case mix, computed for the selected year range; the crude rate and event counts are for the same period. ICBs with &lt;10 events or &lt;100 procedures are suppressed.</p>
     </div>
-  </div>
-  <div class="card">
-    <div class="card-title">Geographic length-of-stay context &nbsp;<span style="font-size:11px;color:var(--text-muted);font-weight:normal;">(2022-2024)</span></div>
-    <div id="los-context-panel"></div>
-    <p style="font-size:11px;color:#666;margin:8px 0 0;">Three views on whether between-region variation is explained by length of stay. <strong>Patient-level slope</strong>: how a one-day increase in the patient's length of stay shifts the log-odds of the outcome, holding ICB-median length of stay fixed. <strong>ICB-context slope</strong>: how a one-day increase in ICB-median length of stay shifts the log-odds, after adjusting for the patient's own length of stay. <strong>Ecological meta-regression</strong>: a between-region regression of ICB-level adjusted risk on ICB-median length of stay, with permutation-based 95% CI. <strong>Spearman trade-off</strong>: rank correlation between ICB-level post-discharge PE risk and ICB-level post-discharge bleeding risk. Longer patient-level length of stay is most plausibly a marker of perioperative complexity, complications, frailty, or clinical surveillance rather than a cause of subsequent post-discharge PE.</p>
   </div>
 </div>
 
@@ -970,8 +965,9 @@ function initOverview() {
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8 } },
+          legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 6, boxWidth: 12, usePointStyle: true } },
           title: { display: true, text: jt + ' Replacement', font: { size: 13 } }
         }
       }
@@ -1224,10 +1220,6 @@ function updateICBMap() {
   window._icbSortCol = 'rate';
   window._icbSortDir = -1;
   renderICBTable();
-
-  // Render the LOS context panel (post-discharge primary cells are flagged
-  // in the source CSV; we surface that flag in the UI).
-  renderLOSContextPanel(joint, outcome, scope);
 }
 
 function renderLOSContextPanel(joint, outcome, scope) {
@@ -1340,7 +1332,11 @@ function renderICBTable() {
   let thtml = '<table class="data-table"><thead><tr>';
   cols.forEach(c => {
     const indicator = col === c.key ? arrow : '';
-    thtml += `<th class="sortable" data-col="${c.key}" style="cursor:pointer;">${c.label}${indicator}</th>`;
+    if (c.key === 'nm') {
+      thtml += `<th>${c.label}</th>`;
+    } else {
+      thtml += `<th class="sortable" data-col="${c.key}" style="cursor:pointer;">${c.label}${indicator}</th>`;
+    }
   });
   thtml += '</tr></thead><tbody>';
   sorted.forEach(d => {
