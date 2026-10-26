@@ -1,43 +1,28 @@
-# postop-pe-dashboard
+# Postoperative PE and major bleeding dashboard
 
-Interactive dashboard accompanying the manuscript **"Post-discharge pulmonary embolism and major bleeding after elective hip and knee replacement in England: a self-controlled crossover study using national hospital data, 2006 to 2024."**
+Interactive national results accompanying the manuscript on pulmonary embolism and major bleeding after primary elective hip and knee replacement in England, 2006 to 2025.
 
-- **Live share link:** https://billyzhonguom.github.io/postop-pe-dashboard/
-- **Manuscript citation:** reference [21]
-- **Parent project repo:** https://github.com/BillyZhongUOM/postoperative-pe-bleeding
+- **Live dashboard:** https://billyzhonguom.github.io/postop-pe-dashboard/
+- **Updated:** 26 October 2026
+- **Index admissions:** 1 January 2006 to 31 December 2025
+- **Follow-up ends:** 30 April 2026
+- **Cohorts:** 1,114,263 knee and 1,066,996 hip replacements
+- **Analysis:** reviewed primary-replacement LRHE release `20261009`, result commit `46b88c3`
 
-## How this repo is maintained
+## Maintenance
 
-This is a **deployment mirror**. The authoritative source of the dashboard lives in the parent project repo at:
+This is a deployment mirror. Edit `dashboard/index.html` and run `dashboard/build_dashboard_data.py` in the parent `postoperative-pe-bleeding` project. The builder defaults to `results/lrhe_20261009/` and checks the analysis specification, cohort sizes, annual coverage and calendar periods. Copy the resulting `index.html` here and push to `main` to rebuild GitHub Pages.
 
-```
-postoperative-pe-bleeding/dashboard/index.html
-```
+The deployed page is self-contained apart from Chart.js and fonts. All numerical results are embedded from the reviewed aggregate tables. No patient-level data are included.
 
-When the dashboard is updated there, the file is copied to `index.html` in this repo and pushed. GitHub Pages then rebuilds automatically on push to `main`.
+## Content
 
-Do **not** edit `index.html` directly in this repo — edits will be overwritten next time the parent project updates. All development happens in the parent repo's `dashboard/` folder, which also contains the Quarto source (`index.qmd` + `ahru.scss`) for the alternative Quarto-rendered version.
+- National annual trends, 2006 to 2025, with in-hospital and post-discharge components
+- Adjusted risks and odds ratios across four complete five-year periods, retaining 2020 and 2021
+- Length of stay, annual procedure counts and proportion of events recorded after discharge
+- Weekly and six-week first-event piecewise Poisson estimates, including the procedure-date sensitivity
+- Post-discharge bleeding subtypes, with counts below 10 withheld before publication
 
-## Contents
-
-- `index.html` — self-contained static dashboard (Leaflet + Chart.js + Mulish/Raleway fonts + embedded study data)
-
-## Design
-
-Visual identity follows the **AHRU / NDPH Oxford house style**:
-
-- Primary navy `#051e41`
-- Accent off-red `#f1290a`
-- Warm off-white background `#F7F6F5`
-- Typography: Mulish (body), Raleway (display)
-
-## Disclosure controls
-
-- ICBs with fewer than 10 events or fewer than 100 procedures in the selected period are automatically suppressed and hidden
-- Trusts with known data gaps (Frimley Health Jun 2022 – Mar 2023; Shrewsbury and Telford Jul 2024 onwards) are flagged
-
-## Attribution
+Regional, ICB, Trust and provider benchmarking are outside this dashboard's scope.
 
 Applied Health Research Unit, Nuffield Department of Population Health, University of Oxford.
-
-This dashboard is a research tool for local benchmarking and is **not** a performance-ranking tool. Apparent differences between ICBs reflect case-mix, local coding practice, and service configuration as well as any genuine variation in outcomes.
